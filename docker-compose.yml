@@ -1,0 +1,29 @@
+services:
+  login-server:
+    image: nonom/l2j-server-login:latest
+    ports:
+      - 2106:2106
+    depends_on:
+      - l2j-database
+    env_file:
+      - .env
+ 
+  game-server:
+    image: nonom/l2j-server-game:latest
+    ports:
+      - 7777:7777
+    depends_on:
+      - l2j-database
+    env_file:
+      - .env
+
+  l2j-database:
+    image: mariadb:11.8
+    volumes:
+      - l2j-database-data:/var/lib/mysql:rw
+    env_file:
+      - .env
+
+volumes:
+  l2j-database-data:
+

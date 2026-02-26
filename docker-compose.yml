@@ -4,16 +4,18 @@ services:
     ports:
       - 2106:2106
     depends_on:
-      - l2j-database
+      l2j-database:
+        condition: service_healthy
     env_file:
       - .env
- 
+
   game-server:
     image: nonom/l2j-server-game:latest
     ports:
       - 7777:7777
     depends_on:
-      - l2j-database
+      l2j-database:
+        condition: service_healthy
     env_file:
       - .env
 
@@ -23,6 +25,12 @@ services:
       - l2j-database-data:/var/lib/mysql:rw
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
 volumes:
   l2j-database-data:

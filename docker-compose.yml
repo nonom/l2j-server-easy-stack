@@ -1,8 +1,9 @@
 services:
   l2j-login-server:
     image: nonom/l2j-server-login:latest
-    ports:
-      - 2106:2106
+    depends_on:
+      l2j-database:
+        condition: service_healthy
     environment:
       - L2JLOGIN_DB_INIT=${DB_INIT:-0}
       - L2JLOGIN_DB_HOST=l2j-database
@@ -16,16 +17,19 @@ services:
       - L2JLOGIN_database_URL=jdbc:mariadb://l2j-database:3306/l2jls
       - L2JLOGIN_database_User=${DB_USER}
       - L2JLOGIN_database_Password=${DB_PASS}
-    depends_on:
-      l2j-database:
-        condition: service_healthy
     env_file:
       - .env
+    ports:
+      - 2106:2106
+    networks:
+      - default
+      - backend
 
   l2j-game-server:
     image: nonom/l2j-server-game:latest
-    ports:
-      - 7777:7777
+    depends_on:
+      l2j-database:
+        condition: service_healthy
     environment:
       - L2JGAME_DB_INIT=${DB_INIT:-0}
       - L2JGAME_DB_HOST=l2j-database
@@ -40,11 +44,13 @@ services:
       - L2JGAME_database_URL=jdbc:mariadb://l2j-database:3306/l2jgs
       - L2JGAME_database_User=${DB_USER}
       - L2JGAME_database_Password=${DB_PASS}
-    depends_on:
-      l2j-database:
-        condition: service_healthy
     env_file:
       - .env
+    ports:
+      - 7777:7777
+    networks:
+      - default
+      - backend
 
   l2j-database:
     image: mariadb:11.8
@@ -53,14 +59,20 @@ services:
     environment:
       - MARIADB_ROOT_HOST=%
       - MARIADB_MYSQL_LOCALHOST_USER=1
+    env_file:
+      - .env
+    networks:
+      - backend
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 10s
-    env_file:
-      - .env
 
 volumes:
   l2j-database-data:
+
+networks:
+  backend:
+    internal: true
